@@ -19,7 +19,7 @@
 <schema name="mds" version="1.3">
 
   <types>
-    <!-- 
+    <!--
        Class names starting with "solr" refer to java classes in the
        org.apache.solr.analysis package.
     -->
@@ -36,24 +36,17 @@
     <!-- The format for this date field is of the form 1995-12-31T23:59:59Z -->
     <fieldType name="date" class="solr.TrieDateField" omitNorms="true" precisionStep="0" positionIncrementGap="0"/>
 
+    <!-- A general unstemmed text field - good if one does not know the language of the field -->
     <fieldType name="text" class="solr.TextField" positionIncrementGap="100" autoGeneratePhraseQueries="true">
       <analyzer>
-        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
-        <filter class="solr.WordDelimiterFilterFactory" generateWordParts="1" generateNumberParts="1" catenateWords="1" catenateNumbers="1" catenateAll="0" splitOnCaseChange="1"/>
-        <filter class="solr.LowerCaseFilterFactory"/>
-        <filter class="solr.PorterStemFilterFactory"/>
-      </analyzer>
-    </fieldType>
-
-    <!-- A general unstemmed text field - good if one does not know the language of the field -->
-    <fieldType name="textgen" class="solr.TextField" positionIncrementGap="100">
-      <analyzer>
+        <charFilter class="solr.HTMLStripCharFilterFactory"/>
+        <charFilter class="solr.MappingCharFilterFactory" mapping="mapping-ISOLatin1Accent.txt"/>
         <tokenizer class="solr.WhitespaceTokenizerFactory"/>
         <filter class="solr.WordDelimiterFilterFactory" generateWordParts="1" generateNumberParts="1" catenateWords="1" catenateNumbers="1" catenateAll="0" splitOnCaseChange="0"/>
         <filter class="solr.LowerCaseFilterFactory"/>
       </analyzer>
     </fieldType>
-    
+
     <!-- lowercases the entire field value, keeping it as a single token.  -->
     <fieldType name="lowercase" class="solr.TextField" positionIncrementGap="100">
       <analyzer>
@@ -61,21 +54,33 @@
         <filter class="solr.LowerCaseFilterFactory" />
       </analyzer>
     </fieldType>
-    
+
     <fieldType name="langcode" class="solr.TextField" positionIncrementGap="100" autoGeneratePhraseQueries="true">
       <analyzer>
-        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
         <filter class="org.datacite.search.filter.LanguageCodeFilterFactory"/>
       </analyzer>
     </fieldType>
-    
+
     <fieldType name="langname" class="solr.TextField" positionIncrementGap="100" autoGeneratePhraseQueries="true">
       <analyzer>
-        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
         <filter class="org.datacite.search.filter.LanguageCodeFilterFactory" languageName="true"/>
       </analyzer>
     </fieldType>
-    
+
+    <fieldType name="doi" class="solr.TextField" positionIncrementGap="100">
+        <analyzer type="index">
+            <tokenizer class="solr.KeywordTokenizerFactory"/>
+            <filter class="solr.LowerCaseFilterFactory" />
+        </analyzer>
+        <analyzer type="query">
+            <tokenizer class="solr.KeywordTokenizerFactory"/>
+            <filter class="solr.LowerCaseFilterFactory" />
+            <filter class="solr.PatternReplaceFilterFactory" pattern="#.*$" replacement="" />
+        </analyzer>
+    </fieldType>
+
     <!-- lowercases the entire field value, keeping it as a single token.  -->
     <fieldType name="symbol" class="solr.TextField" positionIncrementGap="100">
       <analyzer>
@@ -86,14 +91,18 @@
 
     <!-- lowercases the entire field value, keeping it as a single token.  -->
     <fieldType name="identifiers" class="solr.TextField" positionIncrementGap="100">
-      <analyzer>
+      <analyzer type="index">
         <tokenizer class="solr.PathHierarchyTokenizerFactory" delimiter=":" reverse="true"/>
+        <filter class="solr.LowerCaseFilterFactory" />
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
         <filter class="solr.LowerCaseFilterFactory" />
       </analyzer>
     </fieldType>
 
     <!-- since fields of this type are by default not stored or indexed,
-         any data added to them will be ignored outright.  --> 
+         any data added to them will be ignored outright.  -->
     <fieldtype name="ignored" stored="false" indexed="false" multiValued="true" class="solr.StrField" />
 
  </types>
@@ -102,7 +111,7 @@
  <fields>
    <!-- Valid attributes for fields:
      name: mandatory - the name for the field
-     type: mandatory - the name of a previously defined type from the 
+     type: mandatory - the name of a previously defined type from the
        <types> section
      indexed: true if this field should be indexed (searchable or sortable)
      stored: true if this field should be retrievable
@@ -115,44 +124,46 @@
        given field.
        When using MoreLikeThis, fields used for similarity should be
        stored for best performance.
-     termPositions: Store position information with the term vector.  
+     termPositions: Store position information with the term vector.
        This will increase storage costs.
-     termOffsets: Store offset information with the term vector. This 
+     termOffsets: Store offset information with the term vector. This
        will increase storage costs.
      default: a value that should be used if no value is specified
        when adding a document.
    -->
-   
+
    <!-- DataCite mandatory fields -->
-   <field name="doi" type="lowercase" indexed="true" stored="true" required="true" /> 
-   <field name="creator" type="textgen" indexed="true" stored="true" multiValued="true"/> 
-   <field name="title" type="textgen" indexed="true" stored="true" multiValued="true"/> 
-   <field name="publisher" type="textgen" indexed="true" stored="true"/> 
-   <field name="publicationYear" type="string" indexed="true" stored="true"/> 
+   <field name="doi" type="doi" indexed="true" stored="true" required="true" />
+   <field name="creator" type="text" indexed="true" stored="true" multiValued="true"/>
+   <field name="title" type="text" indexed="true" stored="true" multiValued="true"/>
+   <field name="publisher" type="text" indexed="true" stored="true"/>
+   <field name="publicationYear" type="string" indexed="true" stored="true"/>
 
    <!-- DataCite optional fields -->
-   <field name="subject" type="textgen" indexed="true" stored="true" multiValued="true"/> 
-   <field name="contributor" type="textgen" indexed="true" stored="true" multiValued="true"/>
+   <field name="subject" type="text" indexed="true" stored="true" multiValued="true"/>
+   <field name="subjectScheme" type="lowercase" indexed="true" stored="true" multiValued="true"/>
+   <field name="contributor" type="text" indexed="true" stored="true" multiValued="true"/>
    <field name="date" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="language" type="langcode" indexed="true" stored="true"/>
    <field name="language_facet" type="langname" indexed="true" stored="false"/>
-   <field name="resourceType" type="textgen" indexed="true" stored="true"/>
+   <field name="resourceType" type="text" indexed="true" stored="true"/>
    <field name="resourceTypeGeneral" type="lowercase" indexed="true" stored="true"/>
    <field name="alternateIdentifier" type="identifiers" indexed="true" stored="true" multiValued="true"/>
    <field name="relatedIdentifier" type="identifiers" indexed="true" stored="true" multiValued="true"/>
-   <field name="size" type="textgen" indexed="true" stored="true" multiValued="true"/>
+   <field name="size" type="text" indexed="true" stored="true" multiValued="true"/>
    <field name="format" type="text" indexed="true" stored="true" multiValued="true"/>
-   <field name="rights" type="text" indexed="true" stored="true"/>
+   <field name="rights" type="text" indexed="true" stored="true" multiValued="true"/>
+   <field name="rightsURI" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="version" type="string" indexed="true" stored="true"/>
-   <field name="description" type="textgen" indexed="true" stored="true" multiValued="true"/>
-   
+   <field name="description" type="text" indexed="true" stored="true" multiValued="true"/>
+
    <field name="nameIdentifier" type="identifiers" indexed="true" stored="true" multiValued="true"/>
-   
-   
+
+
    <!-- MDS fields -->
-   <field name="allocator" type="textgen" indexed="true" stored="true"/>
+   <field name="allocator" type="text" indexed="true" stored="true"/>
    <field name="allocator_symbol" type="symbol" indexed="true" stored="true"/>
-   <field name="datacentre" type="textgen" indexed="true" stored="true"/>
+   <field name="datacentre" type="text" indexed="true" stored="true"/>
    <field name="datacentre_symbol" type="symbol" indexed="true" stored="true"/>
    <field name="prefix" type="string" indexed="true" stored="true"/>
    <field name="refQuality" type="boolean" indexed="true" stored="true" default="false"/>
@@ -163,10 +174,13 @@
    <field name="uploaded" type="date" indexed="true" stored="true"/>
    <field name="xml" type="binary" indexed="false" stored="true"/>
    <field name="namespace" type="string" indexed="true" stored="true"/>
-   <field name="schema_version" type="string" indexed="true" stored="true" default="2.0"/>
+   <field name="schema_version" type="string" indexed="true" stored="true"/>
 
    <field name="media" type="identifiers" indexed="true" stored="true" multiValued="true"/>
-   
+
+   <field name="allocator_facet" type="string" indexed="true" stored="true"/>
+   <field name="datacentre_facet" type="string" indexed="true" stored="true"/>
+
    <!-- Solr fields -->
    <field name="indexed" type="date" indexed="true" stored="true" default="NOW"/>
    <field name="_version_" type="long" indexed="true" stored="true"/>
@@ -181,17 +195,19 @@
 
    <dynamicField name="ignored_*" type="ignored" multiValued="true"/>
    <dynamicField name="*_facet" type="string" indexed="true" stored="false" multiValued="true"/>
+   <dynamicField name="*Type" type="lowercase" indexed="true" stored="true" multiValued="true"/>
    <dynamicField name="has_*" type="boolean" indexed="true" stored="true" />
+   <dynamicField name="is_*" type="boolean" indexed="true" stored="true" />
 
-   <!-- uncomment the following to ignore any fields that don't already match an existing 
-        field name or dynamic field, rather than reporting them as an error. 
-        alternately, change the type="ignored" to some other type e.g. "text" if you want 
-        unknown fields indexed and/or stored by default --> 
+   <!-- uncomment the following to ignore any fields that don't already match an existing
+        field name or dynamic field, rather than reporting them as an error.
+        alternately, change the type="ignored" to some other type e.g. "text" if you want
+        unknown fields indexed and/or stored by default -->
    <!--dynamicField name="*" type="ignored" multiValued="true" /-->
-   
+
  </fields>
 
- <!-- Field to use to determine and enforce document uniqueness. 
+ <!-- Field to use to determine and enforce document uniqueness.
       Unless this field is marked with required="false", it will be a required field
    -->
  <uniqueKey>dataset_id</uniqueKey>

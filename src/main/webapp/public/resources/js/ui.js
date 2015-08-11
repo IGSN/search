@@ -174,7 +174,13 @@ function reload_results() {
 	load_results(window.location.href);
 }
 
+function reload_results_from_beginning() {
+    url = window.location.href.replace(/&start=[0-9]+/, "");
+    load_results(url);
+}
+
 function load_results(query) {
+	query = query.replace("%20", "+"); // fix for #133
 	History.pushStateWithoutReloadingResults(null, null, fixUrl(query));
 	$("#results").fadeTo(0,0.3);
 	$("#results").load_sync(query, {
@@ -248,6 +254,17 @@ function process_results() {
 	if (options.get("continous"))
 		makeFooterSticky();
 	check_page_layout();
+}
+
+function process_apilinks() {                    
+    var rows = $(".doc").length;
+    $(".footer a.api").each(function() {
+        var a = $(this);
+        var href = a.attr("href");
+        console.log("replace for", href);
+        href = href.replace(/&rows=[0-9]+/, "&rows=" + rows);
+        a.attr("href", href);
+    });
 }
 
 function process_oailink() {
@@ -390,7 +407,7 @@ var options = {
 	opts : new Array(),
 	init : function() {
 		this.add("instant", false, null, "Instant Search", "load results immediately without clicking 'search' button");
-		this.add("continous", false, reload_results, "Continous Scrolling", "load next results automatically when hitting the bottom of the page");
+		this.add("continous", false, reload_results_from_beginning, "Continous Scrolling", "load next results automatically when hitting the bottom of the page");
 		this.add("filter_preview", false, null, "Filter Preview", "show preview of filter on mouse hover");
 		options.menu.init();
 	},
@@ -508,6 +525,7 @@ pagination.next_page = {
 				} else {
 					$("#docs").append(data);
 					process_docs();
+	                process_apilinks();
 				}
 				$("#next_page_loading").hide();
 				pagination.next_page.loading = false;
