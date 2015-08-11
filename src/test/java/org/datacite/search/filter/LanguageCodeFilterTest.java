@@ -7,18 +7,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang.BooleanUtils;
-import org.apache.lucene.analysis.KeywordTokenizer;
+import org.apache.lucene.analysis.core.KeywordTokenizer;
+import org.apache.lucene.analysis.BaseTokenStreamTestCase;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.solr.analysis.BaseTokenTestCase;
 import org.junit.Test;
 
-public class LanguageCodeFilterTest extends BaseTokenTestCase {
+public class LanguageCodeFilterTest extends BaseTokenStreamTestCase {
 
     LanguageCodeFilterFactory filterFactory = new LanguageCodeFilterFactory();
 
     @Test
     public void test() {
         assertFilter("en", "en");
+        assertFilter("GER", "de");
         assertFilter("deu", "de");
         assertFilter("chinese", "zh");
         assertFilter("foobar", "foobar");
@@ -30,6 +31,7 @@ public class LanguageCodeFilterTest extends BaseTokenTestCase {
         assertFilter("en", "English");
         assertFilter("deu", "German");
         assertFilter("chinese", "Chinese");
+        assertFilter("ancient Greek", "Ancient Greek");
         assertFilter("foobar", "foobar");
     }
 

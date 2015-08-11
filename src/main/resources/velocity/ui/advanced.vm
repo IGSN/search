@@ -50,9 +50,9 @@
     <legend>Field Search</legend>
     <noscript>Javascript is required for Advanced Field Search.</noscript>
 
-    #field_text("doi", "DOI")
+    #field_text("doi", "IGSN")
 <!--    #field_text("title", "Title")-->
-    #field_text("creator", "Creator")
+    #field_text("creator", "Registrant")
 <!--    #field_text("publisher", "Publisher")
     #field_text("contributor", "Contributor")
     #field_text("format", "Format")

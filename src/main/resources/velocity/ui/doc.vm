@@ -16,6 +16,7 @@
       #end
     </div>
   </div>
+
   <div class="title">
 
     <a target="_top" href="http://hdl.handle.net/#esc_doi("#f('doi')")">Sample #f("doi")</a>
@@ -32,8 +33,12 @@
 
 
   </div>
+
   <div class="short">
     #field_et_al("creator",5)
+    #if(! $doc.getFieldValue("has_metadata"))
+      [no metadata registered]
+    #end
   </div>
   <div class="full"></div>
   <div class="hl">

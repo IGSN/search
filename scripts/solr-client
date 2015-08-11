@@ -16,9 +16,10 @@ function main {
     "import" )
       sub=$1;shift
       case "$sub" in
-        "status" ) get "dataimport?$fmt";echo;; 
-        "full" ) get "dataimport?command=full-import&clean=true&commit=true&$fmt";echo;; 
-        "delta" ) get "dataimport?command=full-import&clean=false&commit=true&$fmt";echo;; 
+        "status" ) get "admin/dataimport?$fmt";echo;;
+        "abort" ) get "admin/dataimport?command=abort&$fmt";echo;;
+        "full" ) get "admin/dataimport?command=full-import&clean=true&commit=true&optimize=false&$fmt";echo;;
+        "delta" ) get "admin/dataimport?command=full-import&clean=false&commit=true&optimize=false&$fmt";echo;;
         * )
           echo unknown command \"$cmd $sub\"
           help;;
@@ -33,10 +34,15 @@ function post {
   check_env
   url=$SOLR_URL/$1
   echo $url 1>&2
+  
+  if [ -n "$SOLR_ADMIN" ]; then
+    credentials="-u $SOLR_ADMIN:$SOLR_PASS"
+  fi
+  
   if [ -z "$2" ]; then
-    curl -s -u $SOLR_ADMIN:$SOLR_PASS -H "Content-Type: text/xml" --data-binary @- $url < /dev/stdin
+    curl -s $credentials -H "Content-Type: text/xml" --data-binary @- $url < /dev/stdin
   else
-    curl -s -u $SOLR_ADMIN:$SOLR_PASS -H "Content-Type: text/xml" --data-binary $2 $url
+    curl -s $credentials -H "Content-Type: text/xml" --data-binary $2 $url
   fi
 
 }
@@ -51,14 +57,6 @@ function get {
 function check_env {
   if [ -z "$SOLR_URL" ]; then
     echo env var SOLR_URL is undefined 1>&2
-    exit 1
-  fi
-  if [ -z "$SOLR_ADMIN" ]; then
-    echo env var SOLR_ADMIN is undefined 1>&2
-    exit 1
-  fi
-  if [ -z "$SOLR_PASS" ]; then
-    echo env var SOLR_PASS is undefined 1>&2
     exit 1
   fi
 }
@@ -88,14 +86,18 @@ function help {
                              post <body> or read from stdin if <body> is missing
 
     import status        - status of DataImportHandler
-    import full          - do full backup
-    import delta         - do delta backup
+    import full          - do full import
+    import delta         - do delta import
+    import abort         - abort data import
     
   environment variables:
   
-    The following env vars have to be set:
+    The following env var has to be set:
   
     SOLR_URL             - url of solr instance
+    
+    The following env vars are only required, if access is password secured 
+    
     SOLR_ADMIN           - username to access admin realm
     SOLR_PASS            - password of admin user
     

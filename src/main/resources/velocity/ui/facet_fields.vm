@@ -58,7 +58,7 @@
                 <a href="#url_for_facet_filter_missing($field.name)">
                   <span class="value">&lt;not supplied&gt;</span>
                   <span class="count">($facet.count)</span>
-		</a>
+                </a>
               #end
               </li>
             #end
@@ -66,7 +66,7 @@
         #end
         </ul>
 
-      #if($count > $limit)
+      #if($count >= $limit)
         #set($new_limit = $math.add($limit,5))
         <a class="more" href="#url_for_show_more_facet($field.name,$new_limit)">more</a>
       #end 

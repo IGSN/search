@@ -1,3 +1,0 @@
-<span class="title">DOIDB Metadata Search</span>
-&bull;
-<span class="qtime">Query Time: $response.getHeader().get("QTime")ms</span>
