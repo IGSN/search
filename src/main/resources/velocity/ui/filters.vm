@@ -1,0 +1,33 @@
+#macro(make_filter_human_readable $value)
+  #set($value = $value.replaceFirst("\[NOW/YEAR TO \*\]", "this year"))
+  #set($value = $value.replaceFirst("\[NOW-1YEAR/YEAR TO NOW/YEAR\]", "last year"))
+  #set($value = $value.replaceFirst("\[NOW-(\d+)DAYS(/DAY)? TO \*\]", "last $1 days"))
+  #set($value = $value.replaceFirst("\[((\d\d\d\d-\d\d)-01T00:00:00Z) TO \1\+1MONTH\]", "$2"))
+  #set($value = $value.replaceFirst("\[\* TO ((\d\d\d\d-\d\d)-01T00:00:00Z)\+1MONTH\]", "&le; $2"))
+  #set($value = $value.replaceFirst("\[((\d\d\d\d)-01-01T00:00:00Z) TO \1\+1YEAR\]", "$2"))
+  #set($value = $value.replaceFirst("\[\* TO ((\d\d\d\d)-01-01T00:00:00Z)\+1YEAR\]", "&le; $2"))
+  $value
+#end
+#set($filters = [])
+#foreach($filter in $request.params.getParams('fq'))
+  #if($filter != "" and !$filter.startsWith("has_metadata:") and !$filter.startsWith("is_active:"))
+    #set($null = $filters.add($filter))
+  #end
+#end
+<span class="text">
+#if($filters.size() > 0)
+Active filters (<a href="#url_for_nofilters">clear all</a>):
+#elseif($page.results_found > 0)
+No active filters. Use the sidebar to filter search results.
+#end
+</span>
+#foreach($filter in $filters)
+  #set($split = $filter.split(":",2))
+  #set($name = $list.get($split,0))
+  #set($value = $list.get($split,1).replaceAll('"',''))
+  <span class="filter">
+    <a href="#url_for_removing_facet_filter($filter)">
+      <span class="name">#normalize_facet($name)</span><span class="value">#make_filter_human_readable($value)</span>
+    </a>  
+  </span>
+#end

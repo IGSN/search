@@ -37,7 +37,6 @@
 		#if ($doc.containsKey("dif") && $doc.getFieldValue("dif") != "")
     		<a target="_top" class="doi" href="http://doidb.wdc-terra.org/oaip/oai?verb=GetRecord&metadataPrefix=iso19139&identifier=oai:doidb.wdc-terra.org:#esc_doi("#f('dataset_id')")"> ISO19139(DIF-converted) </a>
 		#end
-
 	#end
 
 
@@ -46,32 +45,18 @@
 	#end
 
 	<a target="_top" class="doi" href="http://doidb.wdc-terra.org/oaip/oai?verb=GetRecord&metadataPrefix=datacite&identifier=oai:doidb.wdc-terra.org:#esc_doi("#f('dataset_id')")"> DataCite</a>
-
+ 
+	#field("resourceTypeGeneral")
+	#if_has_field("resourceType", ": #field('resourceType')")
   </span>
 
   </div>
 
-<!--
-  <div class="title">
-    <a target="_top" href='http://data.datacite.org/#esc_doi("#f('doi')")'>#field('title')</a>
-    <span class="version">
-      #if_has_field("version", "[version #field('version')]")
-    </span>
-  </div>
-  <div class="info">
-    <a target="_top" class="doi" href="http://dx.doi.org/#esc_doi("#f('doi')")">doi:<span class="doi">#f("doi")</span></a>
-
-	#if($doc.containsKey("dif") && $doc.getFieldValue("dif") != "")
-    		<a target="_top" class="doi" href="http://doidb.wdc-terra.org/oaip/oai?verb=GetRecord&metadataPrefix=dif&identifier=oai:doidb.wdc-terra.org:#esc_doi("#f('dataset_id')")">NASA-DIF</span></a>
-	#else
-    		<a target="_top" class="doi" href="http://doidb.wdc-terra.org/oaip/oai?verb=GetRecord&metadataPrefix=datacite&identifier=oai:doidb.wdc-terra.org:#esc_doi("#f('dataset_id')")">DataCite</span></a>
-	#end
-    #field("resourceTypeGeneral")
-    #if_has_field("resourceType", ": #field('resourceType')")
-  </div>
--->
   <div class="short">
     #field_et_al("creator",5)
+    #if(! $doc.getFieldValue("has_metadata"))
+      [no metadata registered]
+    #end
   </div>
   <div class="full"></div>
   <div class="hl">

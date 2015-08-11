@@ -9,7 +9,7 @@ To use this software please go to [http://search.datacite.org](https://search.da
 
 # Installation (for development only)
 
-This a java servlet web application. You need a servlet container (e.g. tomcat). 
+This a java servlet web application. You need a servlet container (e.g. tomcat).
 You also need Maven 2.2.1 and JDK 6 in your system (OpenJDK from Ubuntu
 works fine).
 
@@ -17,7 +17,7 @@ All dependencies are managed by Maven public repositories.
 
 ## Solr Home Directory
 
-Solr requires a home directory to store the index and some properties. 
+Solr requires a home directory to store the index and some properties.
 Be aware that the user running running your servlet container must have
 write access to this directory.
 
@@ -27,7 +27,7 @@ All other required files will be in the war-file.
 
 ## Configure the source code
 
-The git repository has a bunch of *.template files. 
+The git repository has a bunch of `*.template` files.
 Those files are templates for the various configuration files which
 are machine specific i.e. passwords, IP addresses etc.
 
@@ -37,9 +37,14 @@ file name.
 Now in such created file you need to adjust values according to your
 local environment.
 
-### solr_home/conf/solrcore.properties
+### solr_home/collection1/conf/solrcore.properties
 
 MDS database specific properties.
+
+You will need to specify JDBC string, for example:
+
+> jdbc:mysql://localhost:3306/datacite?useUnicode=true&characterEncoding=UTF8
+
 
 ### src/main/webapp/META-INF/context.xml
 
@@ -52,28 +57,45 @@ Your usual log4j stuff.
 ## Compiling
 
     mvn clean compile war:war
-    
-will create `target/search.war`, which is ready to be deployed. 
 
-## Configure servlet container
+will create `target/search.war`, which is ready to be deployed.
 
-All resources with write access to the index are secured. You need role `solradmin` to access them.
-If you are using tomcat you can use the following content for `tomcat-users.xml`: 
+### Running locally on your development machine
 
-    <tomcat-users>
-      <user username="<user>" password="<pass>" roles="solradmin"/>
-    </tomcat-users>
+This command will run _packaged_ (i.e. not dynamic) war:
+
+    export MAVEN_OPTS="-Xmx2048m -Xms2048m"
+    mvn clean tomcat:run-war
+
+The application can be accessed at:
+
+> http://localhost:8080/search/public/ui
+
+Solr admin interface is available at:
+
+> http://localhost:8080/search
+
+## Securing Solr
+
+Public access should only be granted for the `/public` path.
+
+### Configure Apache as forward proxy
+
+    RedirectMatch ^/?$ /ui
+    ProxyPassMatch ^/?$ !
+    ProxyPass / ajp://localhost:<port>/search/public
 
 # Running
 
 After deploying the following resources are of interest:
 
-* `/ui` - search user interface
-* `/admin` - admin interface
+* `/public/ui` - search user interface
+* `/` - admin interface
 
 Data from MDS is imported via Solr's DataImportHandler. You can access it via admin interface.
 Another option especially useful for cron jobs is `scripts/solr-client`. Simply try
 
+    export SOLR_URL=http://localhost:8080/search
     scripts/solr-client import delta
-    
+
 for a delta import of MDS metadata. See `solr-client help` for usage.
